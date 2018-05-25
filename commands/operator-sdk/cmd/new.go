@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -31,36 +30,28 @@ import (
 
 func NewNewCmd() *cobra.Command {
 	newCmd := &cobra.Command{
-		Use:   "new <project-name> [required-flags]",
+		Use:   "new <project-name>",
 		Short: "Creates a new operator application",
 		Long: `The operator-sdk new command creates a new operator application and 
 generates a default directory layout based on the input <project-name>. 
 
 <project-name> is the project name of the new operator. (e.g app-operator)
 
-	--api-version and --kind are required flags to generate the new operator application.
-
 For example:
 	$ mkdir $GOPATH/src/github.com/example.com/
 	$ cd $GOPATH/src/github.com/example.com/
-	$ operator-sdk new app-operator --api-version=app.example.com/v1alpha1 --kind=AppService
+	$ operator-sdk new app-operator
 generates a skeletal app-operator application in $GOPATH/src/github.com/example.com/app-operator.
 `,
 		Run: newFunc,
 	}
 
-	newCmd.Flags().StringVar(&apiVersion, "api-version", "", "Kubernetes apiVersion and has a format of $GROUP_NAME/$VERSION (e.g app.example.com/v1alpha1)")
-	newCmd.MarkFlagRequired("api-version")
-	newCmd.Flags().StringVar(&kind, "kind", "", "Kubernetes CustomResourceDefintion kind. (e.g AppService)")
-	newCmd.MarkFlagRequired("kind")
 	newCmd.Flags().BoolVar(&skipGit, "skip-git-init", false, "Do not init the directory as a git repository")
 
 	return newCmd
 }
 
 var (
-	apiVersion  string
-	kind        string
 	projectName string
 	skipGit     bool
 )
@@ -78,9 +69,8 @@ func newFunc(cmd *cobra.Command, args []string) {
 	}
 	parse(args)
 	mustBeNewProject()
-	verifyFlags()
-	g := generator.NewGenerator(apiVersion, kind, projectName, repoPath())
-	err := g.Render()
+	g := generator.NewGenerator(projectName, repoPath())
+	err := g.RenderOperator()
 	if err != nil {
 		cmdError.ExitWithError(cmdError.ExitError, fmt.Errorf("failed to create project %v: %v", projectName, err))
 	}
@@ -127,18 +117,6 @@ func repoPath() string {
 	rp := filepath.Join(string(wd[len(filepath.Join(gp, src)):]), projectName)
 	// strip any "/" prefix from the repo path.
 	return strings.TrimPrefix(rp, string(filepath.Separator))
-}
-
-func verifyFlags() {
-	if len(apiVersion) == 0 {
-		cmdError.ExitWithError(cmdError.ExitBadArgs, errors.New("--api-version must not have empty value"))
-	}
-	if len(kind) == 0 {
-		cmdError.ExitWithError(cmdError.ExitBadArgs, errors.New("--kind must not have empty value"))
-	}
-	if strings.Count(apiVersion, "/") != 1 {
-		cmdError.ExitWithError(cmdError.ExitBadArgs, fmt.Errorf("api-version has wrong format (%v); format must be $GROUP_NAME/$VERSION (e.g app.example.com/v1alpha1)", apiVersion))
-	}
 }
 
 func mustGetwd() string {

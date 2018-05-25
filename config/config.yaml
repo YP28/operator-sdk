@@ -1,0 +1,12 @@
+projectName: gcp-operator
+operator:
+  templates: []
+kinds: []
+#  - apiVersion: gcp.yp28.io/v1alpha1
+#    kind: GCPCloudSQLInstance
+#    templates:
+#      -
+#  - apiVersion: gcp.yp28.io/v1alpha1
+#    kind: GCPCloudSQLDatabase
+#    templates:
+#      -

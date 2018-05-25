@@ -20,39 +20,38 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Config struct {
+type OperatorConfig struct {
+	Templates []string `yaml:"templates"`
+}
+
+type KindConfig struct {
 	// APIVersion is the kubernetes apiVersion that has the format of $GROUP_NAME/$VERSION.
 	APIVersion string `yaml:"apiVersion"`
 	// Kind is the kubernetes resource kind.
 	Kind string `yaml:"kind"`
+	// Templates contains the kubernetes templates that should be
+	// rendered using the given variables.
+	Templates []string `yaml:"templates"`
+}
+
+type Config struct {
 	// ProjectName is name of the new operator application
 	// and is also the name of the base directory.
 	ProjectName string `yaml:"projectName"`
-	// TmplCfg contains the configuration for the templates to use
-	// to generate the Kubernetes configuration files.
-	TmplCfg TemplateConfig `yaml:"templateConfig"`
+	// Operator contains the configuration for the operator itself.
+	Operator *OperatorConfig `yaml:"operator"`
+	// Kinds contains configuration regarding the kinds that are
+	// handled by this operator.
+	Kinds []KindConfig `yaml:"kinds"`
 }
 
-type TemplateConfig struct {
-	// CRDYamlTmpl is the path to the yaml file that contains
-	// the template for the CustomResourceDefinition
-	CRDYamlTmpl string `yaml:"crdYamlTmpl"`
-	// CRYamlTmpl is the path to the yaml file that contains
-	// the template for the CustomResource
-	CRYamlTmpl string `yaml:"crYamlTmpl"`
-	// OperatorYamlTmpl is the path to the yaml file that contains
-	// the template for the Operator Deployment
-	OperatorYamlTmpl string `yaml:"operatorYamlTmpl"`
-	// RBACYamlTmpl is the path to the yaml file that contains
-	// the template for the RBAC yaml file
-	RBACYamlTmpl string `yaml:"rbacYamlTmpl"`
-}
-
-func renderConfigFile(w io.Writer, apiVersion, kind, projectName string) error {
+func renderConfigFile(w io.Writer, projectName string) error {
 	o, err := yaml.Marshal(&Config{
-		APIVersion:  apiVersion,
-		Kind:        kind,
 		ProjectName: projectName,
+		Operator: &OperatorConfig{
+			Templates: []string{},
+		},
+		Kinds: []KindConfig{},
 	})
 	if err != nil {
 		return err

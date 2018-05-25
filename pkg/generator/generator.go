@@ -63,9 +63,6 @@ const (
 )
 
 type Generator struct {
-	// apiVersion is the kubernetes apiVersion that has the format of $GROUP_NAME/$VERSION.
-	apiVersion string
-	kind       string
 	// projectName is name of the new operator application
 	// and is also the name of the base directory.
 	projectName string
@@ -74,11 +71,11 @@ type Generator struct {
 }
 
 // NewGenerator creates a new scaffold Generator.
-func NewGenerator(apiVersion, kind, projectName, repoPath string) *Generator {
-	return &Generator{apiVersion: apiVersion, kind: kind, projectName: projectName, repoPath: repoPath}
+func NewGenerator(projectName, repoPath string) *Generator {
+	return &Generator{projectName: projectName, repoPath: repoPath}
 }
 
-// Render generates the default project structure:
+// RenderOperator generates the default project structure:
 //
 // ├── <projectName>
 // │   ├── cmd
@@ -93,7 +90,7 @@ func NewGenerator(apiVersion, kind, projectName, repoPath string) *Generator {
 // │   └── tmp
 // │       ├── build
 // │       └── codegen
-func (g *Generator) Render() error {
+func (g *Generator) RenderOperator() error {
 	if err := g.renderProject(); err != nil {
 		return err
 	}
@@ -101,6 +98,22 @@ func (g *Generator) Render() error {
 	if err := g.renderCmd(); err != nil {
 		return err
 	}
+	if err := g.renderConfig(); err != nil {
+		return err
+	}
+	if err := g.renderDeploy(); err != nil {
+		return err
+	}
+	if err := g.renderPkg(); err != nil {
+		return err
+	}
+	if err := g.renderTmp(); err != nil {
+		return err
+	}
+	return g.renderGoDep()
+}
+
+func (g *Generator) RenderKind() error {
 	if err := g.renderConfig(); err != nil {
 		return err
 	}
@@ -170,12 +183,12 @@ func (g *Generator) renderConfig() error {
 	if err := os.MkdirAll(cp, defaultDirFileMode); err != nil {
 		return err
 	}
-	return renderConfigFiles(cp, g.apiVersion, g.kind, g.projectName)
+	return renderConfigFiles(cp, g.projectName)
 }
 
-func renderConfigFiles(configDir, apiVersion, kind, projectName string) error {
+func renderConfigFiles(configDir, projectName string) error {
 	buf := &bytes.Buffer{}
-	if err := renderConfigFile(buf, apiVersion, kind, projectName); err != nil {
+	if err := renderConfigFile(buf, projectName); err != nil {
 		return err
 	}
 	return writeFileAndPrint(filepath.Join(configDir, config), buf.Bytes(), defaultFileMode)

@@ -1,4 +1,0 @@
-apiVersion: "{{.APIVersion}}"
-kind: "{{.Kind}}"
-metadata:
-  name: "example"
