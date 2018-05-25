@@ -17,7 +17,7 @@ package generator
 import (
 	"io"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
@@ -28,6 +28,24 @@ type Config struct {
 	// ProjectName is name of the new operator application
 	// and is also the name of the base directory.
 	ProjectName string `yaml:"projectName"`
+	// TmplCfg contains the configuration for the templates to use
+	// to generate the Kubernetes configuration files.
+	TmplCfg TemplateConfig `yaml:"templateConfig"`
+}
+
+type TemplateConfig struct {
+	// CRDYamlTmpl is the path to the yaml file that contains
+	// the template for the CustomResourceDefinition
+	CRDYamlTmpl string `yaml:"crdYamlTmpl"`
+	// CRYamlTmpl is the path to the yaml file that contains
+	// the template for the CustomResource
+	CRYamlTmpl string `yaml:"crYamlTmpl"`
+	// OperatorYamlTmpl is the path to the yaml file that contains
+	// the template for the Operator Deployment
+	OperatorYamlTmpl string `yaml:"operatorYamlTmpl"`
+	// RBACYamlTmpl is the path to the yaml file that contains
+	// the template for the RBAC yaml file
+	RBACYamlTmpl string `yaml:"rbacYamlTmpl"`
 }
 
 func renderConfigFile(w io.Writer, apiVersion, kind, projectName string) error {
